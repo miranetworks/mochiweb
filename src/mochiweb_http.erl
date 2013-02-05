@@ -5,13 +5,13 @@
 
 -module(mochiweb_http).
 -author('bob@mochimedia.com').
--export([start/0, start/1, stop/0, stop/1]).
+-export([start/1, start_link/1, stop/0, stop/1]).
 -export([loop/2, default_body/1]).
 -export([after_response/2, reentry/1]).
 -export([parse_range_request/1, range_skip_length/2]).
 
--define(REQUEST_RECV_TIMEOUT, 300000).   % timeout waiting for request line
--define(HEADERS_RECV_TIMEOUT, 30000). % timeout waiting for headers
+-define(REQUEST_RECV_TIMEOUT, 300000).   %% timeout waiting for request line
+-define(HEADERS_RECV_TIMEOUT, 30000).    %% timeout waiting for headers
 
 -define(MAX_HEADERS, 1000).
 -define(DEFAULTS, [{name, ?MODULE},
@@ -19,9 +19,7 @@
 
 parse_options(Options) ->
     {loop, HttpLoop} = proplists:lookup(loop, Options),
-    Loop = fun (S) ->
-                   ?MODULE:loop(S, HttpLoop)
-           end,
+    Loop = {?MODULE, loop, [HttpLoop]},
     Options1 = [{loop, Loop} | proplists:delete(loop, Options)],
     mochilists:set_defaults(?DEFAULTS, Options1).
 
@@ -31,15 +29,12 @@ stop() ->
 stop(Name) ->
     mochiweb_socket_server:stop(Name).
 
-start() ->
-    start([{ip, "127.0.0.1"},
-           {loop, {?MODULE, default_body}}]).
-
 %% @spec start(Options) -> ServerRet
 %%     Options = [option()]
 %%     Option = {name, atom()} | {ip, string() | tuple()} | {backlog, integer()}
 %%              | {nodelay, boolean()} | {acceptor_pool_size, integer()}
 %%              | {ssl, boolean()} | {profile_fun, undefined | (Props) -> ok}
+%%              | {link, false}
 %% @doc Start a mochiweb server.
 %%      profile_fun is used to profile accept timing.
 %%      After each accept, if defined, profile_fun is called with a proplist of a subset of the mochiweb_socket_server state and timing information.
@@ -47,6 +42,9 @@ start() ->
 %% @end
 start(Options) ->
     mochiweb_socket_server:start(parse_options(Options)).
+
+start_link(Options) ->
+    mochiweb_socket_server:start_link(parse_options(Options)).
 
 frm(Body) ->
     ["<html><head></head><body>"
