@@ -10,7 +10,7 @@
          setopts/2, type/1]).
 
 -define(ACCEPT_TIMEOUT, 2000).
--define(SSL_ACCEPT_TIMEOUT, 30000).
+-define(SSL_ACCEPT_TIMEOUT, inifinty).
 
 listen(Ssl, Port, Opts, SslOpts) ->
     case Ssl of
@@ -30,7 +30,13 @@ accept({ssl, ListenSocket}) ->
     % reason for the try...catch block. Should be fixed in OTP R14.
     try ssl:transport_accept(ListenSocket) of
         {ok, Socket} ->
-            case ssl:ssl_accept(Socket, ?param(ssl_accept_timeout_ms, ?SSL_ACCEPT_TIMEOUT)) of
+            SslAcceptTimeout = 
+                case application:get_env(mochiweb, ssl_accept_timeout_ms) of
+                    {ok, V} -> V;
+                    undefined -> ?SSL_ACCEPT_TIMEOUT
+                end,
+
+            case ssl:ssl_accept(Socket, SslAcceptTimeout) of
                 ok ->
                     {ok, {ssl, Socket}};
                 {error, _} = Err ->

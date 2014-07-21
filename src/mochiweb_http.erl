@@ -13,8 +13,7 @@
 -export([after_response/2, reentry/1]).
 -export([parse_range_request/1, range_skip_length/2]).
 
-% -define(REQUEST_RECV_TIMEOUT, 300000).   %% timeout waiting for request line
--define(REQUEST_RECV_TIMEOUT, 30000).   %% timeout waiting for request line
+-define(REQUEST_RECV_TIMEOUT, 300000).   %% timeout waiting for request line
 -define(HEADERS_RECV_TIMEOUT, 30000).    %% timeout waiting for headers
 
 -define(MAX_HEADERS, 1000).
@@ -56,6 +55,13 @@ loop(Socket, Body) ->
 
 request(Socket, Body) ->
     ok = mochiweb_socket:setopts(Socket, [{active, once}]),
+    
+    ReqRecvTimeout =
+        case application:get_env(mochiweb, http_req_recv_timeout_ms) of
+            {ok, V} -> V;
+            undefined -> ?REQUEST_RECV_TIMEOUT
+        end,
+
     receive
         {Protocol, _, {http_request, Method, Path, Version}} when Protocol == http orelse Protocol == ssl ->
             ok = mochiweb_socket:setopts(Socket, [{packet, httph}]),
@@ -72,7 +78,7 @@ request(Socket, Body) ->
             exit(normal);
         _Other ->
             handle_invalid_request(Socket)
-    after ?param(http_req_recv_timeout_ms,?REQUEST_RECV_TIMEOUT) ->
+    after ReqRecvTimeout ->
         mochiweb_socket:close(Socket),
         exit(normal)
     end.
