@@ -10,7 +10,7 @@
          setopts/2, type/1]).
 
 -define(ACCEPT_TIMEOUT, 2000).
--define(SSL_ACCEPT_TIMEOUT, inifinty).
+-define(SSL_ACCEPT_TIMEOUT, infinity).
 
 listen(Ssl, Port, Opts, SslOpts) ->
     case Ssl of
