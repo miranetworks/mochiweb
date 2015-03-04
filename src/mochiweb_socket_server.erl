@@ -297,11 +297,12 @@ handle_info({'EXIT', Pid, Reason},
             %% If there was an unexpected error accepting, log and sleep.
             error_logger:error_report({?MODULE, ?LINE,
                                        {acceptor_error, Reason}}),
-            timer:sleep(100);
+            timer:sleep(100),
+            {noreply, recycle_acceptor(Pid, State)};
         false ->
-            ok
-    end,
-    {noreply, recycle_acceptor(Pid, State)};
+            error_logger:error_report({?MODULE, ?LINE, {exit_signal, Pid, Reason}}),
+            {stop, Reason, State} 
+    end;
 
 % this is what release_handler needs to get a list of modules,
 % since our supervisor modules list is set to 'dynamic'
