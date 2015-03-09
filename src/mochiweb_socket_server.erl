@@ -300,8 +300,13 @@ handle_info({'EXIT', Pid, Reason},
             timer:sleep(100),
             {noreply, recycle_acceptor(Pid, State)};
         false ->
-            error_logger:error_report({?MODULE, ?LINE, {exit_signal, Pid, Reason}}),
-            {stop, Reason, State} 
+            case is_port(Pid) of
+                true ->
+                    error_logger:error_report({?MODULE, ?LINE, {exit_signal, Pid, Reason}}),
+                    {stop, Reason, State};
+                false ->
+                    {noreply, recycle_acceptor(Pid, State)}
+            end
     end;
 
 % this is what release_handler needs to get a list of modules,
