@@ -1,9 +1,0 @@
-#!/bin/bash
-
-. /home/ubuntu/erlang/R16B03-1/activate
-
-rm -fr deps
-
-make 'test'
-
-#EOF

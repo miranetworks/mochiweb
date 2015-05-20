@@ -26,3 +26,4 @@ dialyzer:
 
 app:
 	@$(REBAR) create template=mochiwebapp dest=$(DEST) appid=$(PROJECT)
+include docker/docker.mk
