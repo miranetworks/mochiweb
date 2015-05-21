@@ -1,12 +1,4 @@
 #!/bin/bash
-EXISTS=`docker images | awk '{print $1}' | grep -E "^mochiweb$"`
-if [ -z "$1" ]; then
-    NOCACHE="false"
-else
-    NOCACHE="true"
-fi
-if [[ -z "${EXISTS}" || ${NOCACHE} = "true" ]]; then
-    export DOCKER_DEV_UID=$(id -u ${USER})
-    cat Dockerfile.template | envsubst | docker build --no-cache=${NOCACHE} -t mochiweb -
-    unset DOCKER_DEV_UID
-fi
+export DOCKER_DEV_UID=$(id -u ${USER})
+cat Dockerfile.template | envsubst | docker build $@ -t mochiweb -
+unset DOCKER_DEV_UID
